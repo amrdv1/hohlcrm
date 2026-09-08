@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
+type Item = { id: number; name: string; investor: string | null; size: string; quantity: number; purchasePrice: number; deliveryCost: number; salePrice: number; createdAt: Date; updatedAt: Date };
+
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
 
 // ─── Helpers ───────────────────────────────────────────
@@ -83,7 +85,7 @@ async function handleMessage(chatId: number, text: string) {
         return;
       }
       let msg = '📋 <b>Останні товари:</b>\n\n';
-      items.forEach((item, i) => {
+      items.forEach((item: Item, i: number) => {
         const profit = item.salePrice - item.purchasePrice - item.deliveryCost;
         msg += `${i + 1}. <b>${item.name}</b>\n`;
         msg += `   💰 Закупка: $${item.purchasePrice} | Продаж: $${item.salePrice}\n`;
@@ -102,9 +104,9 @@ async function handleMessage(chatId: number, text: string) {
     try {
       const items = await prisma.item.findMany();
       const totalItems = items.length;
-      const totalQty = items.reduce((s, i) => s + i.quantity, 0);
-      const totalRevenue = items.reduce((s, i) => s + i.salePrice * i.quantity, 0);
-      const totalCost = items.reduce((s, i) => s + (i.purchasePrice + i.deliveryCost) * i.quantity, 0);
+      const totalQty = items.reduce((s: number, i: Item) => s + i.quantity, 0);
+      const totalRevenue = items.reduce((s: number, i: Item) => s + i.salePrice * i.quantity, 0);
+      const totalCost = items.reduce((s: number, i: Item) => s + (i.purchasePrice + i.deliveryCost) * i.quantity, 0);
       const totalProfit = totalRevenue - totalCost;
 
       await sendMessage(
