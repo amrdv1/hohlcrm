@@ -139,8 +139,8 @@ export default function Home() {
             </div>
           </div>
           <div className="stat">
-            <div className="stat-label">Юля (60%)</div>
-            <div className="stat-val">{$(k.profit * 0.6)}</div>
+            <div className="stat-label">Юля (40%)</div>
+            <div className="stat-val">{$(k.profit * 0.4)}</div>
           </div>
         </div>
 
@@ -176,7 +176,7 @@ export default function Home() {
                     <th>Доставка</th>
                     <th>Продаж</th>
                     <th>Прибуток</th>
-                    <th>Юля 60%</th>
+                    <th>Юля 40%</th>
                     <th>Оренда 10%</th>
                     <th></th>
                   </tr>
@@ -194,7 +194,7 @@ export default function Home() {
                         <td>{$(i.deliveryCost)}</td>
                         <td>{$(i.salePrice)}</td>
                         <td className={p >= 0 ? "green" : "red"}>{$(p)}</td>
-                        <td className="pink">{$(p * 0.6)}</td>
+                        <td className="pink">{$(p * 0.4)}</td>
                         <td className="amber">{$(p * 0.1)}</td>
                         <td><button className="del-btn" onClick={() => del(i.id)}>✕</button></td>
                       </tr>

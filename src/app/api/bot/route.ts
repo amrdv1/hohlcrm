@@ -118,7 +118,7 @@ async function handle(chatId: number, text: string) {
         `📦 Товарів: <b>${n}</b> (${qty} шт)\n` +
         `💰 Виручка: <b>$${rev.toFixed(0)}</b>\n` +
         `📈 Прибуток: <b>$${profit.toFixed(0)}</b>\n` +
-        `👩 Юля (60%): <b>$${(profit * 0.6).toFixed(0)}</b>\n` +
+        `👩 Юля (40%): <b>$${(profit * 0.4).toFixed(0)}</b>\n` +
         `🏠 Оренда (10%): <b>$${(profit * 0.1).toFixed(0)}</b>`,
         [['➕ Додати товар', '📋 Останні товари'], ['🏠 Меню']]
       );
@@ -181,7 +181,8 @@ async function handle(chatId: number, text: string) {
       `📦 ${item.name} (${item.size})\n` +
       `👤 ${item.investor || '—'}\n` +
       `🔢 ${item.quantity} шт\n` +
-      `💵 $${item.purchasePrice} + 🚚 $${item.deliveryCost} → 🏷 $${item.salePrice}\n` +
+      `💵 Закупка $${item.purchasePrice} + Доставка $${item.deliveryCost} = Собівартість $${item.purchasePrice + item.deliveryCost}\n` +
+      `🏷 Продаж: $${item.salePrice}\n` +
       `📈 Прибуток: <b>$${p.toFixed(0)}</b>`,
       [['➕ Ще один', '📋 Список'], ['📊 Статистика', '🏠 Меню']]
     );
