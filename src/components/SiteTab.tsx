@@ -15,9 +15,25 @@ export default function SiteTab() {
   const [description, setDescription] = useState("");
   const [sizes, setSizes] = useState("");
   const [categoryId, setCategoryId] = useState("");
-  const [images, setImages] = useState<FileList | null>(null);
+  const [images, setImages] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const filesArray = Array.from(e.target.files);
+      setImages(prev => [...prev, ...filesArray]);
+      
+      const newPreviews = filesArray.map(file => URL.createObjectURL(file));
+      setImagePreviews(prev => [...prev, ...newPreviews]);
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setImages(prev => prev.filter((_, i) => i !== index));
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
+  };
 
   useEffect(() => {
     fetchData();
@@ -96,7 +112,8 @@ export default function SiteTab() {
     setOldPrice("");
     setDescription("");
     setSizes("");
-    setImages(null);
+    setImages([]);
+    setImagePreviews([]);
   };
 
   return (
@@ -190,7 +207,20 @@ export default function SiteTab() {
 
               <div className="form-group">
                 <label>Фотографії *</label>
-                <input type="file" multiple accept="image/*" onChange={e => setImages(e.target.files)} required />
+                <label className="file-upload-box">
+                  <div className="file-upload-text">Натисніть сюди щоб вибрати фото</div>
+                  <input type="file" multiple accept="image/*" onChange={handleImageSelect} />
+                </label>
+                {imagePreviews.length > 0 && (
+                  <div className="image-preview-container">
+                    {imagePreviews.map((src, idx) => (
+                      <div key={idx} className="image-preview">
+                        <img src={src} alt="preview" />
+                        <button type="button" className="remove-btn" onClick={() => removeImage(idx)}>✕</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="form-group">
