@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
+import SiteTab from "@/components/SiteTab";
 
 interface Item {
   id: number;
@@ -23,6 +24,7 @@ export default function Home() {
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
+  const [activeTab, setActiveTab] = useState<"finance" | "site">("finance");
 
   useEffect(() => {
     if (localStorage.getItem("crm_token")) setAuthed(true);
@@ -121,28 +123,47 @@ export default function Home() {
       </header>
 
       <div className="content">
-        <div className="stats">
-          <div className="stat">
-            <div className="stat-label">Товарів</div>
-            <div className="stat-val">{k.n}</div>
-            <div className="stat-sub">{k.qty} шт.</div>
-          </div>
-          <div className="stat">
-            <div className="stat-label">Виручка</div>
-            <div className="stat-val">{$(k.rev)}</div>
-          </div>
-          <div className="stat">
-            <div className="stat-label">Прибуток</div>
-            <div className="stat-val">{$(k.profit)}</div>
-            <div className={`stat-sub ${k.profit >= 0 ? "green" : "red"}`}>
-              {k.rev > 0 ? ((k.profit / k.rev) * 100).toFixed(1) + "%" : "0%"} маржа
-            </div>
-          </div>
-          <div className="stat">
-            <div className="stat-label">Юля (40%)</div>
-            <div className="stat-val">{$(k.profit * 0.4)}</div>
-          </div>
+        <div className="tabs" style={{display: 'flex', gap: 20, marginBottom: 20}}>
+          <button 
+            className={`tab-btn ${activeTab === 'finance' ? 'active' : ''}`}
+            onClick={() => setActiveTab('finance')}
+            style={{padding: '10px 20px', border: 'none', background: activeTab === 'finance' ? '#fff' : 'transparent', borderRadius: 8, cursor: 'pointer', fontWeight: activeTab === 'finance' ? 600 : 400, boxShadow: activeTab === 'finance' ? '0 2px 8px rgba(0,0,0,0.05)' : 'none'}}
+          >
+            Фінанси / Склад
+          </button>
+          <button 
+            className={`tab-btn ${activeTab === 'site' ? 'active' : ''}`}
+            onClick={() => setActiveTab('site')}
+            style={{padding: '10px 20px', border: 'none', background: activeTab === 'site' ? '#fff' : 'transparent', borderRadius: 8, cursor: 'pointer', fontWeight: activeTab === 'site' ? 600 : 400, boxShadow: activeTab === 'site' ? '0 2px 8px rgba(0,0,0,0.05)' : 'none'}}
+          >
+            Сайт Holy Drip
+          </button>
         </div>
+
+        {activeTab === 'finance' && (
+          <>
+            <div className="stats">
+              <div className="stat">
+                <div className="stat-label">Товарів</div>
+                <div className="stat-val">{k.n}</div>
+                <div className="stat-sub">{k.qty} шт.</div>
+              </div>
+              <div className="stat">
+                <div className="stat-label">Виручка</div>
+                <div className="stat-val">{$(k.rev)}</div>
+              </div>
+              <div className="stat">
+                <div className="stat-label">Прибуток</div>
+                <div className="stat-val">{$(k.profit)}</div>
+                <div className={`stat-sub ${k.profit >= 0 ? "green" : "red"}`}>
+                  {k.rev > 0 ? ((k.profit / k.rev) * 100).toFixed(1) + "%" : "0%"} маржа
+                </div>
+              </div>
+              <div className="stat">
+                <div className="stat-label">Юля (40%)</div>
+                <div className="stat-val">{$(k.profit * 0.4)}</div>
+              </div>
+            </div>
 
         <div className="tcard">
           <div className="tcard-top">
@@ -205,6 +226,12 @@ export default function Home() {
             )}
           </div>
         </div>
+          </>
+        )}
+
+        {activeTab === 'site' && (
+          <SiteTab />
+        )}
       </div>
     </div>
   );
