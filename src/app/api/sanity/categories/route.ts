@@ -6,9 +6,9 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     const categories = await sanityClient.fetch(`
-      *[_type == "category"] | order(name asc) {
+      *[_type == "category"] | order(title asc) {
         _id,
-        name
+        "name": title
       }
     `);
     return NextResponse.json(categories);

@@ -8,10 +8,10 @@ export async function GET() {
     const products = await sanityClient.fetch(`
       *[_type == "product"] | order(_createdAt desc) {
         _id,
-        name,
+        "name": title,
         price,
-        "imageUrl": images[0].asset->url,
-        "category": category->name,
+        "imageUrl": coalesce(images[0].secure_url, images[0].asset->url),
+        "category": category->title,
         sizes
       }
     `);
@@ -61,7 +61,7 @@ export async function POST(req: Request) {
     // 3. Create Product Document
     const newProduct = {
       _type: 'product',
-      name,
+      title: name,
       slug: { current: slug },
       price,
       oldPrice,
