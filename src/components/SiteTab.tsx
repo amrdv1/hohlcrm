@@ -106,6 +106,21 @@ export default function SiteTab() {
     }
   };
 
+  
+  const handleDeleteProduct = async (id: string, name: string) => {
+    if (!confirm(`Видалити товар "${name}" з сайту?`)) return;
+    try {
+      const res = await fetch(`/api/sanity/products?id=${id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Помилка видалення');
+      }
+      setProducts(prev => prev.filter(p => p._id !== id));
+    } catch (err: any) {
+      alert(err.message || 'Не вдалося видалити товар');
+    }
+  };
+
   const resetForm = () => {
     setName("");
     setPrice("");
@@ -144,6 +159,7 @@ export default function SiteTab() {
                 <th>Категорія</th>
                 <th>Ціна (₴)</th>
                 <th>Розміри</th>
+                <th>Дії</th>
               </tr>
             </thead>
             <tbody>
@@ -158,6 +174,24 @@ export default function SiteTab() {
                   <td>{p.category}</td>
                   <td>₴{p.price}</td>
                   <td><span className="tag">{p.sizes?.join(', ') || '—'}</span></td>
+                  <td>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteProduct(p._id, p.name)}
+                      style={{
+                        padding: '4px 10px',
+                        background: '#fef2f2',
+                        color: '#dc2626',
+                        border: '1px solid #fecaca',
+                        borderRadius: 6,
+                        cursor: 'pointer',
+                        fontSize: 12,
+                        fontWeight: 500
+                      }}
+                    >
+                      ✕ Видалити
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>

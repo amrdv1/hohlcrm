@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import SiteTab from "@/components/SiteTab";
+import OrdersTab from "@/components/OrdersTab";
 
 interface Item {
   id: number;
@@ -24,7 +25,7 @@ export default function Home() {
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
-  const [activeTab, setActiveTab] = useState<"finance" | "site">("finance");
+  const [activeTab, setActiveTab] = useState<"finance" | "site" | "orders">("finance");
 
   useEffect(() => {
     if (localStorage.getItem("crm_token")) setAuthed(true);
@@ -138,6 +139,13 @@ export default function Home() {
           >
             Сайт Holy Drip
           </button>
+          <button 
+            className={`tab-btn ${activeTab === 'orders' ? 'active' : ''}`}
+            onClick={() => setActiveTab('orders')}
+            style={{padding: '10px 20px', border: 'none', background: activeTab === 'orders' ? '#fff' : 'transparent', borderRadius: 8, cursor: 'pointer', fontWeight: activeTab === 'orders' ? 600 : 400, boxShadow: activeTab === 'orders' ? '0 2px 8px rgba(0,0,0,0.05)' : 'none'}}
+          >
+            📦 Замовлення
+          </button>
         </div>
 
         {activeTab === 'finance' && (
@@ -231,6 +239,9 @@ export default function Home() {
 
         {activeTab === 'site' && (
           <SiteTab />
+        )}
+        {activeTab === 'orders' && (
+          <OrdersTab />
         )}
       </div>
     </div>
