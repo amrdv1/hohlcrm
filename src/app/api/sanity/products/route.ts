@@ -56,7 +56,18 @@ export async function POST(req: Request) {
     }
 
     // 2. Generate slug
-    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+    const translit = (str: string) => {
+      const ru: {[key: string]: string} = {
+        'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'є': 'ye', 'ё': 'yo',
+        'ж': 'zh', 'з': 'z', 'и': 'i', 'і': 'i', 'ї': 'yi', 'й': 'y', 'к': 'k', 'л': 'l',
+        'м': 'm', 'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u',
+        'ф': 'f', 'х': 'kh', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh', 'щ': 'shch', 'ы': 'y',
+        'э': 'e', 'ю': 'yu', 'я': 'ya', 'ь': '', 'ъ': ''
+      };
+      return str.split('').map(l => ru[l] || l).join('');
+    };
+    let slug = translit(name.toLowerCase()).replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+    if (!slug) slug = Date.now().toString();
 
     // 3. Create Product Document
     const newProduct = {
