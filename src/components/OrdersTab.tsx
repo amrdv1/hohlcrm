@@ -179,7 +179,7 @@ export default function OrdersTab() {
                 <th>Клієнт</th>
                 <th>Контакти</th>
                 <th>Доставка</th>
-                <th>Товари</th>
+                <th style={{ minWidth: 280 }}>Товари</th>
                 <th>Сума</th>
                 <th>Статус</th>
                 <th>Змінити статус</th>
@@ -231,13 +231,91 @@ export default function OrdersTab() {
                     <td style={{ maxWidth: 180, whiteSpace: "normal", fontSize: 12, color: "#555" }}>
                       {o.address || "—"}
                     </td>
-                    <td style={{ maxWidth: 220, whiteSpace: "normal" }}>
-                      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                        {o.items?.map((item, idx) => (
-                          <div key={idx} style={{ fontSize: 12, color: "#333" }}>
-                            • <strong>{item.product?.name || "Товар"}</strong> ({item.size}) × {item.quantity}
-                          </div>
-                        ))}
+                    <td style={{ minWidth: 280, maxWidth: 360, whiteSpace: "normal" }}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                        {o.items?.map((item, idx) => {
+                          const rawName = item.product?.name || "Товар";
+                          // Clean leading/trailing spaces and leading bullets
+                          const cleanName = rawName.trim().replace(/^[•\s-]+/, "").trim();
+                          const img = item.product?.images?.[0];
+                          const size = (item.size || "").trim().toUpperCase();
+
+                          return (
+                            <div
+                              key={idx}
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 10,
+                                paddingBottom: (o.items && o.items.length > 1 && idx < o.items.length - 1) ? 8 : 0,
+                                borderBottom: (o.items && o.items.length > 1 && idx < o.items.length - 1) ? "1px dashed #f0f0f0" : "none"
+                              }}
+                            >
+                              {img ? (
+                                <img
+                                  src={img}
+                                  alt={cleanName}
+                                  style={{
+                                    width: 40,
+                                    height: 40,
+                                    objectFit: "cover",
+                                    borderRadius: 6,
+                                    border: "1px solid #e5e5e5",
+                                    flexShrink: 0
+                                  }}
+                                />
+                              ) : (
+                                <div
+                                  style={{
+                                    width: 40,
+                                    height: 40,
+                                    background: "#f3f4f6",
+                                    borderRadius: 6,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    fontSize: 16,
+                                    color: "#9ca3af",
+                                    flexShrink: 0
+                                  }}
+                                >
+                                  📦
+                                </div>
+                              )}
+                              <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                                <span
+                                  style={{
+                                    fontSize: 12,
+                                    fontWeight: 600,
+                                    color: "#111",
+                                    lineHeight: 1.35
+                                  }}
+                                >
+                                  {cleanName}
+                                </span>
+                                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                  {size && size !== "НЕ ВКАЗАНО" && (
+                                    <span
+                                      style={{
+                                        background: "#f3f4f6",
+                                        color: "#374151",
+                                        padding: "1px 6px",
+                                        borderRadius: 4,
+                                        fontSize: 11,
+                                        fontWeight: 600
+                                      }}
+                                    >
+                                      {size}
+                                    </span>
+                                  )}
+                                  <span style={{ fontSize: 11, color: "#6b7280" }}>
+                                    × {item.quantity} шт.
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </td>
                     <td>
