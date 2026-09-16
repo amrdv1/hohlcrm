@@ -167,10 +167,7 @@ export default function Home() {
                   {k.rev > 0 ? ((k.profit / k.rev) * 100).toFixed(1) + "%" : "0%"} маржа
                 </div>
               </div>
-              <div className="stat">
-                <div className="stat-label">Юля (40%)</div>
-                <div className="stat-val">{$(k.profit * 0.4)}</div>
-              </div>
+
             </div>
 
         <div className="tcard">
@@ -205,8 +202,7 @@ export default function Home() {
                     <th>Доставка</th>
                     <th>Продаж</th>
                     <th>Прибуток</th>
-                    <th>Юля 40%</th>
-                    <th>Оренда 10%</th>
+                                        <th>Оренда 10%</th>
                     <th></th>
                   </tr>
                 </thead>
@@ -223,8 +219,7 @@ export default function Home() {
                         <td>{$(i.deliveryCost)}</td>
                         <td>{$(i.salePrice)}</td>
                         <td className={p >= 0 ? "green" : "red"}>{$(p)}</td>
-                        <td className="pink">{$(p * 0.4)}</td>
-                        <td className="amber">{$(p * 0.1)}</td>
+                                                <td className="amber">{$(p * 0.1)}</td>
                         <td><button className="del-btn" onClick={() => del(i.id)}>✕</button></td>
                       </tr>
                     );

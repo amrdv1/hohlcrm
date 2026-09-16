@@ -118,7 +118,6 @@ async function handle(chatId: number, text: string) {
         `📦 Товарів: <b>${n}</b> (${qty} шт)\n` +
         `💰 Виручка: <b>$${rev.toFixed(0)}</b>\n` +
         `📈 Прибуток: <b>$${profit.toFixed(0)}</b>\n` +
-        `👩 Юля (40%): <b>$${(profit * 0.4).toFixed(0)}</b>\n` +
         `🏠 Оренда (10%): <b>$${(profit * 0.1).toFixed(0)}</b>`,
         [['➕ Додати товар', '📋 Останні товари'], ['🏠 Меню']]
       );
