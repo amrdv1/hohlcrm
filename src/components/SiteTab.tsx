@@ -15,6 +15,10 @@ export default function SiteTab() {
   const [oldPrice, setOldPrice] = useState("");
   const [description, setDescription] = useState("");
   const [material, setMaterial] = useState("");
+  const [availability, setAvailability] = useState("");
+  const [condition, setCondition] = useState("");
+  const [season, setSeason] = useState("");
+  const [authenticity, setAuthenticity] = useState("");
   const [measurements, setMeasurements] = useState("");
   const [sizes, setSizes] = useState("");
   const [categoryId, setCategoryId] = useState("");
@@ -78,6 +82,10 @@ export default function SiteTab() {
     setOldPrice(p.oldPrice ? String(p.oldPrice) : "");
     setDescription(p.description || "");
     setMaterial(p.material || "");
+    setAvailability(p.availability || "");
+    setCondition(p.condition || "");
+    setSeason(p.season || "");
+    setAuthenticity(p.authenticity || "");
     
     if (p.measurements && Array.isArray(p.measurements)) {
       const mStr = p.measurements
@@ -123,6 +131,10 @@ export default function SiteTab() {
     if (oldPrice) formData.append("oldPrice", oldPrice);
     formData.append("description", description);
     formData.append("material", material);
+    formData.append("availability", availability);
+    formData.append("condition", condition);
+    formData.append("season", season);
+    formData.append("authenticity", authenticity);
     formData.append("measurements", measurements);
 
     // Convert sizes like "S, M, L" to array ["S", "M", "L"]
@@ -177,6 +189,10 @@ export default function SiteTab() {
     setOldPrice("");
     setDescription("");
     setMaterial("");
+    setAvailability("");
+    setCondition("");
+    setSeason("");
+    setAuthenticity("");
     setMeasurements("");
     setSizes("");
     setImages([]);
@@ -209,7 +225,7 @@ export default function SiteTab() {
             <thead>
               <tr>
                 <th>Фото</th>
-                <th>Назва</th>
+                <th>Назва та Характеристики</th>
                 <th>Категорія</th>
                 <th>Ціна (₴)</th>
                 <th>Розміри / Заміри</th>
@@ -221,18 +237,41 @@ export default function SiteTab() {
                 <tr key={p._id}>
                   <td>
                     {p.imageUrl ? (
-                      <img src={p.imageUrl} alt={p.name} style={{ width: 42, height: 42, objectFit: 'cover', borderRadius: 4 }} />
+                      <img src={p.imageUrl} alt={p.name} style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: 4 }} />
                     ) : '—'}
                   </td>
                   <td className="n">
                     <strong>{p.name}</strong>
-                    {p.material && (
-                      <div style={{ fontSize: 11, color: '#059669', marginTop: 2, fontWeight: 500 }}>
-                        🧵 {p.material}
+                    {p.availability && (
+                      <div style={{ fontSize: 11, color: '#059669', marginTop: 3, display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: '#10b981' }}></span>
+                        {p.availability}
                       </div>
                     )}
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
+                      {p.material && (
+                        <span style={{ fontSize: 10, background: '#f0fdf4', color: '#166534', padding: '1px 6px', borderRadius: 4, border: '1px solid #bbf7d0' }}>
+                          🧵 {p.material}
+                        </span>
+                      )}
+                      {p.condition && (
+                        <span style={{ fontSize: 10, background: '#f8fafc', color: '#475569', padding: '1px 6px', borderRadius: 4, border: '1px solid #e2e8f0' }}>
+                          Стан: {p.condition}
+                        </span>
+                      )}
+                      {p.season && (
+                        <span style={{ fontSize: 10, background: '#f8fafc', color: '#475569', padding: '1px 6px', borderRadius: 4, border: '1px solid #e2e8f0' }}>
+                          Сезон: {p.season}
+                        </span>
+                      )}
+                      {p.authenticity && (
+                        <span style={{ fontSize: 10, background: '#f8fafc', color: '#475569', padding: '1px 6px', borderRadius: 4, border: '1px solid #e2e8f0' }}>
+                          ✓ {p.authenticity}
+                        </span>
+                      )}
+                    </div>
                     {p.description && (
-                      <div style={{ fontSize: 11, color: '#888', marginTop: 2, maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <div style={{ fontSize: 11, color: '#888', marginTop: 3, maxWidth: 320, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {p.description}
                       </div>
                     )}
@@ -297,7 +336,7 @@ export default function SiteTab() {
 
       {showModal && (
         <div className="modal-backdrop" onClick={() => setShowModal(false)}>
-          <div className="modal" style={{ maxWidth: 620 }} onClick={e => e.stopPropagation()}>
+          <div className="modal" style={{ maxWidth: 640 }} onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h2>{editingProduct ? "Редагувати товар на сайті" : "Додати товар на сайт"}</h2>
               <button onClick={() => setShowModal(false)}>✕</button>
@@ -335,13 +374,57 @@ export default function SiteTab() {
                 <input value={sizes} onChange={e => setSizes(e.target.value)} placeholder="Наприклад: S, M, L, XL" />
               </div>
 
+              {/* Availability Status */}
               <div className="form-group">
-                <label>Матеріал виробу</label>
+                <label>Статус наявності / доставки</label>
                 <input 
-                  value={material} 
-                  onChange={e => setMaterial(e.target.value)} 
-                  placeholder="Наприклад: 100% Cotton Denim або 100% Heavyweight Cotton (450g/m²)" 
+                  value={availability} 
+                  onChange={e => setAvailability(e.target.value)} 
+                  placeholder="За замовчуванням: В наявності в Києві (1–2 дні)" 
                 />
+              </div>
+
+              {/* Characteristics Block */}
+              <div style={{ background: '#f8fafc', padding: '14px', borderRadius: 8, border: '1px solid #e2e8f0', marginBottom: 16 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 10 }}>
+                  Характеристики артефакту
+                </div>
+                <div className="form-row">
+                  <div className="form-group" style={{ marginBottom: 8 }}>
+                    <label style={{ fontSize: 12 }}>Матеріал</label>
+                    <input 
+                      value={material} 
+                      onChange={e => setMaterial(e.target.value)} 
+                      placeholder="100% Щільна преміальна бавовна (Premium Cotton)" 
+                    />
+                  </div>
+                  <div className="form-group" style={{ marginBottom: 8 }}>
+                    <label style={{ fontSize: 12 }}>Стан</label>
+                    <input 
+                      value={condition} 
+                      onChange={e => setCondition(e.target.value)} 
+                      placeholder="10/10 (Новий з бірками)" 
+                    />
+                  </div>
+                </div>
+                <div className="form-row">
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label style={{ fontSize: 12 }}>Сезон</label>
+                    <input 
+                      value={season} 
+                      onChange={e => setSeason(e.target.value)} 
+                      placeholder="All-Season / Мультисезонний" 
+                    />
+                  </div>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label style={{ fontSize: 12 }}>Автентичність</label>
+                    <input 
+                      value={authenticity} 
+                      onChange={e => setAuthenticity(e.target.value)} 
+                      placeholder="100% Curated Piece" 
+                    />
+                  </div>
+                </div>
               </div>
 
               <div className="form-group">

@@ -14,6 +14,10 @@ export async function GET() {
         oldPrice,
         description,
         material,
+        availability,
+        condition,
+        season,
+        authenticity,
         "imageUrl": coalesce(images[0].secure_url, images[0].asset->url),
         "images": coalesce(images[]{ "url": coalesce(secure_url, asset->url) }.url, []),
         "category": category->title,
@@ -72,6 +76,10 @@ export async function POST(req: Request) {
     const oldPrice = formData.get('oldPrice') ? Number(formData.get('oldPrice')) : undefined;
     const description = (formData.get('description') as string) || '';
     const material = (formData.get('material') as string) || '';
+    const availability = (formData.get('availability') as string) || '';
+    const condition = (formData.get('condition') as string) || '';
+    const season = (formData.get('season') as string) || '';
+    const authenticity = (formData.get('authenticity') as string) || '';
     const measurementsRaw = (formData.get('measurements') as string) || '';
     const sizes = JSON.parse((formData.get('sizes') as string) || '[]');
     const categoryId = formData.get('categoryId') as string;
@@ -121,6 +129,10 @@ export async function POST(req: Request) {
     };
 
     if (material) newProduct.material = material;
+    if (availability) newProduct.availability = availability;
+    if (condition) newProduct.condition = condition;
+    if (season) newProduct.season = season;
+    if (authenticity) newProduct.authenticity = authenticity;
     if (measurements.length > 0) newProduct.measurements = measurements;
 
     const created = await sanityClient.create(newProduct);
@@ -140,6 +152,10 @@ export async function PUT(req: Request) {
     const oldPrice = formData.get('oldPrice') ? Number(formData.get('oldPrice')) : undefined;
     const description = (formData.get('description') as string) || '';
     const material = formData.get('material');
+    const availability = formData.get('availability');
+    const condition = formData.get('condition');
+    const season = formData.get('season');
+    const authenticity = formData.get('authenticity');
     const measurementsRaw = formData.get('measurements');
     const sizesRaw = formData.get('sizes') as string;
     const categoryId = formData.get('categoryId') as string;
@@ -159,9 +175,11 @@ export async function PUT(req: Request) {
       patchData.oldPrice = oldPrice;
     }
 
-    if (material !== null) {
-      patchData.material = (material as string).trim();
-    }
+    if (material !== null) patchData.material = (material as string).trim();
+    if (availability !== null) patchData.availability = (availability as string).trim();
+    if (condition !== null) patchData.condition = (condition as string).trim();
+    if (season !== null) patchData.season = (season as string).trim();
+    if (authenticity !== null) patchData.authenticity = (authenticity as string).trim();
 
     if (measurementsRaw !== null) {
       patchData.measurements = parseMeasurements(measurementsRaw as string);
