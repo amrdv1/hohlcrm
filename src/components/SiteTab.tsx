@@ -7,6 +7,7 @@ export default function SiteTab() {
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<any | null>(null);
 
   // Form states
   const [name, setName] = useState("");
@@ -17,6 +18,7 @@ export default function SiteTab() {
   const [categoryId, setCategoryId] = useState("");
   const [images, setImages] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [existingImages, setExistingImages] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -24,13 +26,13 @@ export default function SiteTab() {
     if (e.target.files) {
       const filesArray = Array.from(e.target.files);
       setImages(prev => [...prev, ...filesArray]);
-      
+
       const newPreviews = filesArray.map(file => URL.createObjectURL(file));
       setImagePreviews(prev => [...prev, ...newPreviews]);
     }
   };
 
-  const removeImage = (index: number) => {
+  const removeNewImage = (index: number) => {
     setImages(prev => prev.filter((_, i) => i !== index));
     setImagePreviews(prev => prev.filter((_, i) => i !== index));
   };
@@ -50,7 +52,7 @@ export default function SiteTab() {
       if (catRes.ok) {
         const cats = await catRes.json();
         setCategories(cats);
-        if (cats.length > 0) setCategoryId(cats[0]._id);
+        if (cats.length > 0 && !categoryId) setCategoryId(cats[0]._id);
       }
     } catch (e) {
       console.error(e);
@@ -59,10 +61,40 @@ export default function SiteTab() {
     }
   };
 
-  const handleAddProduct = async (e: React.FormEvent) => {
+  const handleOpenAdd = () => {
+    resetForm();
+    setEditingProduct(null);
+    if (categories.length > 0) setCategoryId(categories[0]._id);
+    setShowModal(true);
+  };
+
+  const handleOpenEdit = (p: any) => {
+    resetForm();
+    setEditingProduct(p);
+    setName(p.name || p.title || "");
+    setPrice(String(p.price || ""));
+    setOldPrice(p.oldPrice ? String(p.oldPrice) : "");
+    setDescription(p.description || "");
+    setSizes((p.sizes || []).join(", "));
+    
+    // Match category
+    const cat = categories.find(c => c._id === p.categoryId || c.name === p.category);
+    setCategoryId(cat ? cat._id : (p.categoryId || (categories[0]?._id || "")));
+
+    const imgs = p.images?.length ? p.images : (p.imageUrl ? [p.imageUrl] : []);
+    setExistingImages(imgs);
+    setShowModal(true);
+  };
+
+  const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !price || !categoryId || !images || images.length === 0) {
-      setError("Заповніть обов'язкові поля (Назва, Ціна, Категорія, Фото)");
+    if (!name || !price || !categoryId) {
+      setError("Заповніть обов'язкові поля (Назва, Ціна, Категорія)");
+      return;
+    }
+
+    if (!editingProduct && (!images || images.length === 0)) {
+      setError("Додайте щонайменше одне фото товару");
       return;
     }
 
@@ -70,11 +102,14 @@ export default function SiteTab() {
     setError("");
 
     const formData = new FormData();
+    if (editingProduct) {
+      formData.append("id", editingProduct._id);
+    }
     formData.append("name", name);
     formData.append("price", price);
     if (oldPrice) formData.append("oldPrice", oldPrice);
     formData.append("description", description);
-    
+
     // Convert sizes like "S, M, L" to array ["S", "M", "L"]
     const sizesArray = sizes.split(",").map(s => s.trim()).filter(Boolean);
     formData.append("sizes", JSON.stringify(sizesArray));
@@ -85,8 +120,10 @@ export default function SiteTab() {
     }
 
     try {
-      const r = await fetch("/api/sanity/products", {
-        method: "POST",
+      const url = "/api/sanity/products";
+      const method = editingProduct ? "PUT" : "POST";
+      const r = await fetch(url, {
+        method,
         body: formData,
       });
 
@@ -95,7 +132,6 @@ export default function SiteTab() {
         throw new Error(err.error || "Помилка збереження");
       }
 
-      // Success
       setShowModal(false);
       resetForm();
       fetchData(); // Reload list
@@ -106,7 +142,6 @@ export default function SiteTab() {
     }
   };
 
-  
   const handleDeleteProduct = async (id: string, name: string) => {
     if (!confirm(`Видалити товар "${name}" з сайту?`)) return;
     try {
@@ -129,17 +164,19 @@ export default function SiteTab() {
     setSizes("");
     setImages([]);
     setImagePreviews([]);
+    setExistingImages([]);
+    setError("");
   };
 
   return (
     <div className="tcard">
       <div className="tcard-top">
-        <div style={{display:"flex",alignItems:"center"}}>
+        <div style={{ display: "flex", alignItems: "center" }}>
           <h2>Товари на Сайті</h2>
           <span>{products.length}</span>
         </div>
         <div>
-          <button className="hbtn" onClick={() => setShowModal(true)}>+ Додати на сайт</button>
+          <button className="hbtn" onClick={handleOpenAdd}>+ Додати на сайт</button>
         </div>
       </div>
 
@@ -167,30 +204,60 @@ export default function SiteTab() {
                 <tr key={p._id}>
                   <td>
                     {p.imageUrl ? (
-                      <img src={p.imageUrl} alt={p.name} style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 4 }} />
+                      <img src={p.imageUrl} alt={p.name} style={{ width: 42, height: 42, objectFit: 'cover', borderRadius: 4 }} />
                     ) : '—'}
                   </td>
-                  <td className="n">{p.name}</td>
-                  <td>{p.category}</td>
-                  <td>₴{p.price}</td>
+                  <td className="n">
+                    <strong>{p.name}</strong>
+                    {p.description && (
+                      <div style={{ fontSize: 11, color: '#888', marginTop: 2, maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {p.description}
+                      </div>
+                    )}
+                  </td>
+                  <td>{p.category || '—'}</td>
+                  <td>
+                    <strong>₴{p.price}</strong>
+                    {p.oldPrice && <div style={{ fontSize: 11, color: '#999', textDecoration: 'line-through' }}>₴{p.oldPrice}</div>}
+                  </td>
                   <td><span className="tag">{p.sizes?.join(', ') || '—'}</span></td>
                   <td>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteProduct(p._id, p.name)}
-                      style={{
-                        padding: '4px 10px',
-                        background: '#fef2f2',
-                        color: '#dc2626',
-                        border: '1px solid #fecaca',
-                        borderRadius: 6,
-                        cursor: 'pointer',
-                        fontSize: 12,
-                        fontWeight: 500
-                      }}
-                    >
-                      ✕ Видалити
-                    </button>
+                    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEdit(p)}
+                        style={{
+                          padding: '5px 12px',
+                          background: '#f0f9ff',
+                          color: '#0284c7',
+                          border: '1px solid #bae6fd',
+                          borderRadius: 6,
+                          cursor: 'pointer',
+                          fontSize: 12,
+                          fontWeight: 600,
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        ✎ Змінити
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteProduct(p._id, p.name)}
+                        style={{
+                          padding: '5px 10px',
+                          background: '#fef2f2',
+                          color: '#dc2626',
+                          border: '1px solid #fecaca',
+                          borderRadius: 6,
+                          cursor: 'pointer',
+                          fontSize: 12,
+                          fontWeight: 500,
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        ✕ Видалити
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -201,27 +268,27 @@ export default function SiteTab() {
 
       {showModal && (
         <div className="modal-backdrop" onClick={() => setShowModal(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
+          <div className="modal" style={{ maxWidth: 600 }} onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>Додати товар на сайт</h2>
+              <h2>{editingProduct ? "Редагувати товар на сайті" : "Додати товар на сайт"}</h2>
               <button onClick={() => setShowModal(false)}>✕</button>
             </div>
-            <form onSubmit={handleAddProduct} className="modal-form">
-              {error && <div className="login-err" style={{marginBottom: 15}}>{error}</div>}
+            <form onSubmit={handleSaveProduct} className="modal-form">
+              {error && <div className="login-err" style={{ marginBottom: 15 }}>{error}</div>}
               
               <div className="form-group">
-                <label>Назва *</label>
-                <input value={name} onChange={e => setName(e.target.value)} required />
+                <label>Назва товару *</label>
+                <input value={name} onChange={e => setName(e.target.value)} placeholder="Наприклад: NO FAITH STUDIOS Longsleeve" required />
               </div>
 
               <div className="form-row">
                 <div className="form-group">
                   <label>Ціна (₴) *</label>
-                  <input type="number" value={price} onChange={e => setPrice(e.target.value)} required />
+                  <input type="number" value={price} onChange={e => setPrice(e.target.value)} placeholder="3000" required />
                 </div>
                 <div className="form-group">
                   <label>Стара ціна (₴)</label>
-                  <input type="number" value={oldPrice} onChange={e => setOldPrice(e.target.value)} />
+                  <input type="number" value={oldPrice} onChange={e => setOldPrice(e.target.value)} placeholder="Необов'язково" />
                 </div>
               </div>
 
@@ -235,36 +302,69 @@ export default function SiteTab() {
               </div>
 
               <div className="form-group">
-                <label>Розміри (через кому: S, M, L)</label>
+                <label>Розміри (через кому: S, M, L або 42, 43)</label>
                 <input value={sizes} onChange={e => setSizes(e.target.value)} placeholder="Наприклад: S, M, L, XL" />
               </div>
 
               <div className="form-group">
-                <label>Фотографії *</label>
+                <label>
+                  {editingProduct ? "Нові фото (залиште порожнім, щоб залишити поточні)" : "Фотографії товару *"}
+                </label>
                 <label className="file-upload-box">
-                  <div className="file-upload-text">Натисніть сюди щоб вибрати фото</div>
+                  <div className="file-upload-text">
+                    {editingProduct ? "Натисніть сюди, щоб завантажити нові фото" : "Натисніть сюди, щоб вибрати фото"}
+                  </div>
                   <input type="file" multiple accept="image/*" onChange={handleImageSelect} />
                 </label>
+
+                {/* Existing Images preview */}
+                {editingProduct && existingImages.length > 0 && imagePreviews.length === 0 && (
+                  <div style={{ marginTop: 8 }}>
+                    <div style={{ fontSize: 11, color: '#666', marginBottom: 6 }}>Поточні фото в Sanity:</div>
+                    <div className="image-preview-container">
+                      {existingImages.map((src, idx) => (
+                        <div key={idx} className="image-preview">
+                          <img src={src} alt="existing" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* New Previews */}
                 {imagePreviews.length > 0 && (
-                  <div className="image-preview-container">
-                    {imagePreviews.map((src, idx) => (
-                      <div key={idx} className="image-preview">
-                        <img src={src} alt="preview" />
-                        <button type="button" className="remove-btn" onClick={() => removeImage(idx)}>✕</button>
-                      </div>
-                    ))}
+                  <div style={{ marginTop: 8 }}>
+                    <div style={{ fontSize: 11, color: '#0284c7', marginBottom: 6 }}>Нові обрані фото (замінять старі):</div>
+                    <div className="image-preview-container">
+                      {imagePreviews.map((src, idx) => (
+                        <div key={idx} className="image-preview">
+                          <img src={src} alt="preview" />
+                          <button type="button" className="remove-btn" onClick={() => removeNewImage(idx)}>✕</button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
 
               <div className="form-group">
-                <label>Опис</label>
-                <textarea rows={4} value={description} onChange={e => setDescription(e.target.value)}></textarea>
+                <label>Опис, матеріал та характеристики товару</label>
+                <textarea 
+                  rows={5} 
+                  value={description} 
+                  onChange={e => setDescription(e.target.value)}
+                  placeholder="Вкажіть опис, матеріал (напр. 100% Cotton), стан та деталі"
+                ></textarea>
               </div>
 
-              <button type="submit" disabled={saving} className="save-btn">
-                {saving ? "Збереження в Sanity..." : "Зберегти на сайт"}
-              </button>
+              <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
+                <button type="button" onClick={() => setShowModal(false)} style={{ flex: 1, padding: 12, border: '1px solid #ddd', background: '#fff', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>
+                  Скасувати
+                </button>
+                <button type="submit" disabled={saving} className="save-btn" style={{ flex: 2 }}>
+                  {saving ? "Збереження в Sanity..." : (editingProduct ? "Зберегти зміни" : "Додати товар")}
+                </button>
+              </div>
             </form>
           </div>
         </div>

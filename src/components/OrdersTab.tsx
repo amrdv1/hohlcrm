@@ -5,6 +5,8 @@ import { useEffect, useState, useMemo } from "react";
 interface OrderItem {
   id: string;
   productId: string;
+  name?: string;
+  image?: string;
   size: string;
   quantity: number;
   price: number;
@@ -234,10 +236,10 @@ export default function OrdersTab() {
                     <td style={{ minWidth: 280, maxWidth: 360, whiteSpace: "normal" }}>
                       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                         {o.items?.map((item, idx) => {
-                          const rawName = item.product?.name || "Товар";
+                          const rawName = item.name || item.product?.name || "Товар";
                           // Clean leading/trailing spaces and leading bullets
                           const cleanName = rawName.trim().replace(/^[•\s-]+/, "").trim();
-                          const img = item.product?.images?.[0];
+                          const img = item.image || item.product?.images?.[0];
                           const size = (item.size || "").trim().toUpperCase();
 
                           return (
