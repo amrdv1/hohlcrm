@@ -13,12 +13,13 @@ export async function GET() {
         price,
         oldPrice,
         description,
+        material,
         "imageUrl": coalesce(images[0].secure_url, images[0].asset->url),
         "images": coalesce(images[]{ "url": coalesce(secure_url, asset->url) }.url, []),
         "category": category->title,
         "categoryId": category->_ref,
         sizes,
-        measurements
+        "measurements": coalesce(measurements, [])
       }
     `);
     return NextResponse.json(products);
@@ -39,6 +40,30 @@ const translit = (str: string) => {
   return str.split('').map(l => ru[l] || l).join('');
 };
 
+const parseMeasurements = (raw: string) => {
+  return raw
+    .split('\n')
+    .map(line => line.trim())
+    .filter(Boolean)
+    .map(line => {
+      const match = line.match(/^([^:\-–]+)[:\-–]\s*(.+)$/);
+      if (match) {
+        return {
+          _type: 'object',
+          _key: Math.random().toString(36).substring(2, 9),
+          size: match[1].trim(),
+          details: match[2].trim(),
+        };
+      }
+      return {
+        _type: 'object',
+        _key: Math.random().toString(36).substring(2, 9),
+        size: 'Замір',
+        details: line.trim(),
+      };
+    });
+};
+
 export async function POST(req: Request) {
   try {
     const formData = await req.formData();
@@ -46,6 +71,8 @@ export async function POST(req: Request) {
     const price = Number(formData.get('price'));
     const oldPrice = formData.get('oldPrice') ? Number(formData.get('oldPrice')) : undefined;
     const description = (formData.get('description') as string) || '';
+    const material = (formData.get('material') as string) || '';
+    const measurementsRaw = (formData.get('measurements') as string) || '';
     const sizes = JSON.parse((formData.get('sizes') as string) || '[]');
     const categoryId = formData.get('categoryId') as string;
     const imageFiles = formData.getAll('images') as File[];
@@ -75,8 +102,10 @@ export async function POST(req: Request) {
     let slug = translit(name.toLowerCase()).replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
     if (!slug) slug = Date.now().toString();
 
+    const measurements = parseMeasurements(measurementsRaw);
+
     // 3. Create Product Document
-    const newProduct = {
+    const newProduct: any = {
       _type: 'product',
       title: name,
       slug: { current: slug },
@@ -90,6 +119,9 @@ export async function POST(req: Request) {
       },
       images: uploadedImages,
     };
+
+    if (material) newProduct.material = material;
+    if (measurements.length > 0) newProduct.measurements = measurements;
 
     const created = await sanityClient.create(newProduct);
     return NextResponse.json(created);
@@ -107,6 +139,8 @@ export async function PUT(req: Request) {
     const price = Number(formData.get('price'));
     const oldPrice = formData.get('oldPrice') ? Number(formData.get('oldPrice')) : undefined;
     const description = (formData.get('description') as string) || '';
+    const material = formData.get('material');
+    const measurementsRaw = formData.get('measurements');
     const sizesRaw = formData.get('sizes') as string;
     const categoryId = formData.get('categoryId') as string;
     const imageFiles = formData.getAll('images') as File[];
@@ -123,6 +157,14 @@ export async function PUT(req: Request) {
 
     if (oldPrice !== undefined && !isNaN(oldPrice)) {
       patchData.oldPrice = oldPrice;
+    }
+
+    if (material !== null) {
+      patchData.material = (material as string).trim();
+    }
+
+    if (measurementsRaw !== null) {
+      patchData.measurements = parseMeasurements(measurementsRaw as string);
     }
 
     if (sizesRaw) {

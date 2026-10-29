@@ -14,6 +14,8 @@ export default function SiteTab() {
   const [price, setPrice] = useState("");
   const [oldPrice, setOldPrice] = useState("");
   const [description, setDescription] = useState("");
+  const [material, setMaterial] = useState("");
+  const [measurements, setMeasurements] = useState("");
   const [sizes, setSizes] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [images, setImages] = useState<File[]>([]);
@@ -75,6 +77,17 @@ export default function SiteTab() {
     setPrice(String(p.price || ""));
     setOldPrice(p.oldPrice ? String(p.oldPrice) : "");
     setDescription(p.description || "");
+    setMaterial(p.material || "");
+    
+    if (p.measurements && Array.isArray(p.measurements)) {
+      const mStr = p.measurements
+        .map((m: any) => `${m.size ? m.size + ': ' : ''}${m.details || ''}`)
+        .join('\n');
+      setMeasurements(mStr);
+    } else {
+      setMeasurements("");
+    }
+
     setSizes((p.sizes || []).join(", "));
     
     // Match category
@@ -109,6 +122,8 @@ export default function SiteTab() {
     formData.append("price", price);
     if (oldPrice) formData.append("oldPrice", oldPrice);
     formData.append("description", description);
+    formData.append("material", material);
+    formData.append("measurements", measurements);
 
     // Convert sizes like "S, M, L" to array ["S", "M", "L"]
     const sizesArray = sizes.split(",").map(s => s.trim()).filter(Boolean);
@@ -161,6 +176,8 @@ export default function SiteTab() {
     setPrice("");
     setOldPrice("");
     setDescription("");
+    setMaterial("");
+    setMeasurements("");
     setSizes("");
     setImages([]);
     setImagePreviews([]);
@@ -195,7 +212,7 @@ export default function SiteTab() {
                 <th>Назва</th>
                 <th>Категорія</th>
                 <th>Ціна (₴)</th>
-                <th>Розміри</th>
+                <th>Розміри / Заміри</th>
                 <th>Дії</th>
               </tr>
             </thead>
@@ -209,6 +226,11 @@ export default function SiteTab() {
                   </td>
                   <td className="n">
                     <strong>{p.name}</strong>
+                    {p.material && (
+                      <div style={{ fontSize: 11, color: '#059669', marginTop: 2, fontWeight: 500 }}>
+                        🧵 {p.material}
+                      </div>
+                    )}
                     {p.description && (
                       <div style={{ fontSize: 11, color: '#888', marginTop: 2, maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {p.description}
@@ -220,7 +242,14 @@ export default function SiteTab() {
                     <strong>₴{p.price}</strong>
                     {p.oldPrice && <div style={{ fontSize: 11, color: '#999', textDecoration: 'line-through' }}>₴{p.oldPrice}</div>}
                   </td>
-                  <td><span className="tag">{p.sizes?.join(', ') || '—'}</span></td>
+                  <td>
+                    <span className="tag">{p.sizes?.join(', ') || '—'}</span>
+                    {p.measurements && p.measurements.length > 0 && (
+                      <div style={{ fontSize: 11, color: '#0284c7', marginTop: 4, fontWeight: 500 }}>
+                        📏 Замірів: {p.measurements.length}
+                      </div>
+                    )}
+                  </td>
                   <td>
                     <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                       <button
@@ -268,7 +297,7 @@ export default function SiteTab() {
 
       {showModal && (
         <div className="modal-backdrop" onClick={() => setShowModal(false)}>
-          <div className="modal" style={{ maxWidth: 600 }} onClick={e => e.stopPropagation()}>
+          <div className="modal" style={{ maxWidth: 620 }} onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h2>{editingProduct ? "Редагувати товар на сайті" : "Додати товар на сайт"}</h2>
               <button onClick={() => setShowModal(false)}>✕</button>
@@ -304,6 +333,29 @@ export default function SiteTab() {
               <div className="form-group">
                 <label>Розміри (через кому: S, M, L або 42, 43)</label>
                 <input value={sizes} onChange={e => setSizes(e.target.value)} placeholder="Наприклад: S, M, L, XL" />
+              </div>
+
+              <div className="form-group">
+                <label>Матеріал виробу</label>
+                <input 
+                  value={material} 
+                  onChange={e => setMaterial(e.target.value)} 
+                  placeholder="Наприклад: 100% Cotton Denim або 100% Heavyweight Cotton (450g/m²)" 
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Таблиця розмірів / Заміри (по одному рядку на розмір)</label>
+                <div style={{ fontSize: 11, color: '#666', marginBottom: 6 }}>
+                  Формат: Розмір: Заміри (наприклад: S: Довжина 72см, Груди 56см, Плечі 50см)
+                </div>
+                <textarea 
+                  rows={4} 
+                  value={measurements} 
+                  onChange={e => setMeasurements(e.target.value)}
+                  placeholder="S: Груди 56см, Довжина 72см, Плечі 50см&#10;M: Груди 58см, Довжина 74см, Плечі 52см&#10;L: Груди 60см, Довжина 76см, Плечі 54см&#10;XL: Груди 62см, Довжина 78см, Плечі 56см"
+                  style={{ fontFamily: 'monospace', fontSize: 13, lineHeight: '1.4' }}
+                />
               </div>
 
               <div className="form-group">
@@ -348,12 +400,12 @@ export default function SiteTab() {
               </div>
 
               <div className="form-group">
-                <label>Опис, матеріал та характеристики товару</label>
+                <label>Опис товару</label>
                 <textarea 
-                  rows={5} 
+                  rows={4} 
                   value={description} 
                   onChange={e => setDescription(e.target.value)}
-                  placeholder="Вкажіть опис, матеріал (напр. 100% Cotton), стан та деталі"
+                  placeholder="Вкажіть детальний опис, особливості фасону, стан та деталі"
                 ></textarea>
               </div>
 
